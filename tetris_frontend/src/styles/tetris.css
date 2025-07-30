@@ -1,0 +1,21 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
+  background: #182027;
+  color: #fff;
+}
+
+/* Make sure elements can be centered */
+#root, .tetris-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .tetris-root {
+    flex-direction: column;
+  }
+}
