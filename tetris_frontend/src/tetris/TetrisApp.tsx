@@ -8,10 +8,17 @@ import "../styles/tetris.css";
  * Main entry point for the Tetris Game.
  * Modern, minimalistic, dark theme.
  */
-export const TetrisApp: React.FC = () => {
+/**
+ * PUBLIC_INTERFACE
+ * Main entry point for the Tetris Game.
+ * Modern, minimalistic, dark theme.
+ */
+const TetrisApp: React.FC = () => {
   return (
     <div className="tetris-root">
       <TetrisGame />
     </div>
   );
 };
+
+export default TetrisApp;

@@ -1,5 +1,5 @@
 import { Composition } from "remotion";
-import { TetrisApp } from "./tetris/TetrisApp";
+import TetrisApp from "./tetris/TetrisApp";
 
 /**
  * PUBLIC_INTERFACE
