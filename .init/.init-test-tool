@@ -1,0 +1,4 @@
+{
+    "command": "npm run build",
+    "working_directory": "/home/kavia/workspace/code-generation/react-tetris-game-50826-50835/tetris_frontend"
+}

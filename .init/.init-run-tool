@@ -1,0 +1,4 @@
+{
+    "command": "BROWSER=none npm run dev -- --port <port> --host <host>",
+    "working_directory": "/home/kavia/workspace/code-generation/react-tetris-game-50826-50835/tetris_frontend"
+}
