@@ -1,21 +1,86 @@
 body {
   margin: 0;
-  font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
+  font-family: "SF Pro Text", "Segoe UI", "Helvetica", "Arial", sans-serif;
   background: #182027;
   color: #fff;
+  min-height: 100vh;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Make sure elements can be centered */
 #root, .tetris-root {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100vw;
+  box-sizing: border-box;
+  background: #182027;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-  .tetris-root {
-    flex-direction: column;
+.tetris-game-layout {
+  width: 100vw;
+  min-height: 100vh;
+}
+
+.tetris-board-container {
+  outline: none;
+}
+
+.tetris-cell {
+  transition: background 0.12s, border 0.12s;
+  box-sizing: border-box;
+}
+
+.tetris-sidepanel {
+  min-width: 144px;
+  max-width: 200px;
+}
+
+@media (max-width: 900px) {
+  .tetris-game-layout {
+    flex-direction: column !important;
+    gap: 0 !important;
   }
+  .tetris-sidepanel {
+    margin-top: 18px;
+    justify-content: flex-start;
+    align-items: center;
+    width: 94vw;
+  }
+  .tetris-board-container {
+    margin-bottom: 8px;
+    box-shadow: 0 7px 41px -13px #0c1355cc;
+  }
+}
+
+@media (max-width: 640px) {
+  .tetris-root, .tetris-game-layout {
+    min-height: unset;
+    height: 100vh;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100vw;
+    padding: 0 3px;
+  }
+  .tetris-board-container {
+    width: 96vw !important;
+    max-width: 98vw;
+    height: auto !important;
+    padding: 2px;
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 390px) {
+  .tetris-board-container {
+    border-width: 1.2px !important;
+    padding: 1.6px;
+  }
+}
+
+/* Game Over/Pause fade animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(1.12);}
+  to { opacity: 1; transform: scale(1);}
 }
