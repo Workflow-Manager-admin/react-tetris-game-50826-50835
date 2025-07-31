@@ -41,7 +41,7 @@ const LEVEL_SPEEDS = [
 
 const START_LEVEL = 0;
 
-  // Remove unused type
+// Remove unused type
 // type Move = "left" | "right" | "down" | "rotate" | "drop" | "pause" | "restart";
 
 interface PieceState {
@@ -192,7 +192,7 @@ export const TetrisGame: React.FC = () => {
       return;
     }
     const speed = LEVEL_SPEEDS[level] ?? 40;
-    fallTimer.current = setTimeout(fall, speed);
+    fallTimer.current = setTimeout(() => fall(), speed);
     return () => {
       if (fallTimer.current) clearTimeout(fallTimer.current);
     };
@@ -263,7 +263,7 @@ export const TetrisGame: React.FC = () => {
       if (e.key === " " || e.code === "Space") {
         // Hard drop
         setPiece({ ...piece, pos: nextPos });
-        setTimeout(fall, 20);
+        setTimeout(() => fall(), 20);
         return;
       }
       if (isValidPosition(board, nextShape, nextPos)) {
@@ -316,21 +316,23 @@ export const TetrisGame: React.FC = () => {
     cell: number,
     ghost = false
   ) => {
+    // Sleek, rounded, modern app-look for cells; no debug outlines, soft shadow on filled blocks
     const style: React.CSSProperties = {
-      width: dimensions.cell - 2,
-      height: dimensions.cell - 2,
+      width: dimensions.cell - 3.5,
+      height: dimensions.cell - 3.5,
       background:
         ghost
           ? COLORS.ghost
           : filled
             ? color
             : COLORS.cell,
-      border: filled ? `1.5px solid ${COLORS.border}` : `1px solid ${COLORS.border}`,
-      borderRadius: 6,
-      margin: 0.5,
+      border: filled ? `1.3px solid #191f33cc` : "none",
+      borderRadius: 8.5,
+      margin: 1.2,
       boxSizing: "border-box",
-      opacity: ghost ? 0.4 : 1,
-      transition: "background 0.09s",
+      boxShadow: filled && !ghost ? "0 2.3px 13px #0013, 0 1.1px 7px #181c232e" : undefined,
+      opacity: ghost ? 0.42 : 1,
+      transition: "background 0.11s, border 0.12s",
     };
     return (
       <div
@@ -398,237 +400,386 @@ export const TetrisGame: React.FC = () => {
     ));
   };
 
-  // Score/next/controls panel
+  // --- UI Overhaul for professional mobile look ---
+
+  // Touch-friendly controls for mobile
+  const mobileControlBtn = (label: string, onClick: () => void, aria: string, icon?: React.ReactNode) => (
+    <button
+      style={{
+        width: 62,
+        height: 62,
+        fontSize: 32,
+        fontWeight: 800,
+        borderRadius: "55%",
+        background: "linear-gradient(180deg,#232944 78%, #1a2443 100%)",
+        border: `2.4px solid ${COLORS.primary}`,
+        color: COLORS.accent,
+        boxShadow: "0 3px 7px #141a2e55",
+        margin: 6,
+        outline: "none",
+        cursor: "pointer",
+        userSelect: "none",
+        transition: "background 0.1s, border 0.14s, color 0.07s",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        touchAction: "manipulation",
+      }}
+      aria-label={aria}
+      tabIndex={0}
+      onClick={onClick}
+    >
+      {icon || label}
+    </button>
+  );
+
+  // mobile control handlers
+  const moveLeft = () => {
+    if (piece && !isPaused && !isGameOver) {
+      let pos = { ...piece.pos, x: piece.pos.x - 1 };
+      if (isValidPosition(board, piece.shape, pos)) setPiece({ ...piece, pos });
+    }
+  };
+  const moveRight = () => {
+    if (piece && !isPaused && !isGameOver) {
+      let pos = { ...piece.pos, x: piece.pos.x + 1 };
+      if (isValidPosition(board, piece.shape, pos)) setPiece({ ...piece, pos });
+    }
+  };
+  const moveDown = () => {
+    if (piece && !isPaused && !isGameOver) {
+      let pos = { ...piece.pos, y: piece.pos.y + 1 };
+      if (isValidPosition(board, piece.shape, pos)) setPiece({ ...piece, pos });
+    }
+  };
+  const rotatePiece = () => {
+    if (piece && !isPaused && !isGameOver) {
+      let nextShape = rotate(piece.shape);
+      if (isValidPosition(board, nextShape, piece.pos))
+        setPiece({ ...piece, shape: nextShape });
+    }
+  };
+  const hardDrop = () => {
+    if (piece && !isPaused && !isGameOver) {
+      let dropTo = getDropY(board, piece.shape, piece.pos);
+      setPiece({ ...piece, pos: { ...piece.pos, y: dropTo } });
+      setTimeout(() => fall(), 26);
+    }
+  };
+
+  // Overhauled Layout
   return (
     <div
       className="tetris-game-layout"
       style={{
         display: "flex",
-        flexDirection: "row",
-        gap: 32,
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
+        width: "100vw",
         background: COLORS.background,
         fontFamily: FONT_FAMILY,
-        color: COLORS.text,
-        padding: 12,
-        boxSizing: "border-box",
-        width: "100vw",
+        padding: 0,
       }}
     >
-      {/* Board */}
+      {/* Score Panel */}
       <div
-        className="tetris-board-container"
         style={{
-          background: "#12151b",
-          border: `3px solid ${COLORS.primary}`,
-          borderRadius: 17,
-          boxShadow: "0px 7px 40px -13px #183165dd",
-          padding: 9,
-          width: dimensions.boardW,
-          height: dimensions.boardH,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "flex-end",
           alignItems: "center",
-          marginBottom: 8,
-          position: "relative",
-          transition: "border 0.12s",
-        }}
-        tabIndex={0}
-        ref={gameBoardRef}
-      >
-        {/* Game Over Overlay */}
-        {isGameOver && (
-          <div
-            style={{
-              position: "absolute",
-              zIndex: 10,
-              left: 0,
-              top: 0,
-              width: "100%",
-              height: "100%",
-              background: `${COLORS.background}cc`,
-              borderRadius: 17,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 44,
-              color: flashGameOver ? COLORS.accent : COLORS.primary,
-              fontWeight: 800,
-              letterSpacing: 2,
-              filter: flashGameOver ? "drop-shadow(0px 0px 10px #ff0a)" : "",
-              animation: "fade-in 0.5s",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 56,
-                marginBottom: 10,
-                fontWeight: 900,
-                textShadow: `0 2px 16px #000`,
-              }}
-            >
-              GAME OVER
-            </span>
-            <span style={{ fontSize: 26 }}>
-              Score: <span style={{ color: COLORS.accent }}>{score}</span>
-            </span>
-            <span style={{ fontSize: 19, opacity: 0.85, marginTop: 12 }}>
-              Press <kbd style={kbdStyle}>R</kbd> or <kbd style={kbdStyle}>Space</kbd> to restart
-            </span>
-          </div>
-        )}
-        {/* Pause Overlay */}
-        {!isGameOver && isPaused && (
-          <div
-            style={{
-              position: "absolute",
-              zIndex: 10,
-              left: 0,
-              top: 0,
-              width: "100%",
-              height: "100%",
-              background: "#232944cc",
-              borderRadius: 17,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 40,
-              color: COLORS.secondary,
-              fontWeight: 800,
-              letterSpacing: 2,
-            }}
-          >
-            <span
-              style={{
-                marginBottom: 18,
-                textShadow: `0 2px 16px #000`,
-              }}
-            >
-              PAUSED
-            </span>
-            <span style={{ fontSize: 18, fontWeight: 400, opacity: 0.85 }}>
-              Press <kbd style={kbdStyle}>Space</kbd> to resume
-            </span>
-          </div>
-        )}
-        <div
-          style={{
-            width: dimensions.boardW,
-            height: dimensions.boardH,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-end",
-            zIndex: 1,
-            pointerEvents: "none",
-            filter: isGameOver ? "blur(2.1px)" : undefined,
-          }}
-        >
-          {renderBoard()}
-        </div>
-      </div>
-      {/* Side Panel */}
-      <div
-        className="tetris-sidepanel"
-        style={{
-          minWidth: 160,
-          display: "flex",
-          flexDirection: "column",
-          gap: 22,
-          alignItems: "flex-start",
-          justifyContent: "flex-start",
+          background: "linear-gradient(172deg,#232944 95%,#1a2443 100%)",
+          borderRadius: 18,
+          padding: "16px 32px 18px 32px",
+          boxShadow: "0 6px 32px -4px #1a1c338c",
+          border: `2.1px solid ${COLORS.primary}`,
+          marginBottom: 18,
+          marginTop: 28,
+          minWidth: 220,
+          maxWidth: 380,
         }}
       >
-        <div
+        <span
           style={{
-            background: COLORS.cell,
-            borderRadius: 10,
-            padding: "10px 18px 13px 18px",
-            boxShadow: "0 2px 11px #222a",
-            border: `1.7px solid ${COLORS.border}`,
+            color: COLORS.accent,
+            fontWeight: 800,
+            fontSize: 40,
+            letterSpacing: 1.2,
+            lineHeight: 1.09,
+            textShadow: `0 3px 13px #0812`,
             marginBottom: 8,
           }}
         >
-          <div style={{ fontSize: 15, letterSpacing: 1, opacity: 0.92 }}>
-            Score
+          TETRIS
+        </span>
+        <span style={{
+          fontSize: 22,
+          color: COLORS.text,
+          letterSpacing: 0.7,
+          opacity: 0.87,
+          fontWeight: 600,
+        }}>Score</span>
+        <span style={{
+          fontSize: 38,
+          color: COLORS.accent,
+          fontWeight: 900,
+          letterSpacing: "1.1px",
+          marginBottom: 8,
+        }}>{score}</span>
+        <div style={{
+          display: "flex",
+          gap: '24px',
+          width: "90%",
+          marginTop: 7,
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+          <div>
+            <div style={{ fontSize: 13.5, color: "#7fa1", opacity: 0.7 }}>Level</div>
+            <div style={{
+              fontSize: 21, color: COLORS.primary, fontWeight: 700,
+              background: "#253466da", borderRadius: 6, padding: "1.5px 7px", marginTop: 1
+            }}>{level + 1}</div>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: COLORS.accent }}>
-            {score}
-          </div>
-          <div style={{ fontSize: 12, color: "#eee", marginTop: 2 }}>
-            Level:{" "}
-            <strong style={{ color: COLORS.primary }}>{level + 1}</strong>
-          </div>
-          <div style={{ fontSize: 12, color: "#eee", marginTop: 2 }}>
-            Lines: <strong>{lines}</strong>
+          <div>
+            <div style={{ fontSize: 13.5, color: "#7fa1", opacity: 0.7 }}>Lines</div>
+            <div style={{
+              fontSize: 21,
+              color: COLORS.accent,
+              background: "#402b1b70",
+              fontWeight: 600,
+              borderRadius: 6,
+              padding: "1.5px 7px",
+              marginTop: 1,
+            }}>{lines}</div>
           </div>
         </div>
-        {/* Next Piece */}
-        <div
-          style={{
-            background: COLORS.cell,
-            borderRadius: 10,
-            padding: "10px 14px",
-            boxShadow: "0 2px 10px #111a",
-            border: `1.5px solid ${COLORS.border}`,
-          }}
-        >
-          <div style={{ fontSize: 14, marginBottom: 4, color: "#fffc" }}>
-            Next
-          </div>
-          <NextPiecePreview
-            pieceType={nextPieceType}
-            cellSize={dimensions.cell}
-          />
-        </div>
-        {/* Controls */}
-        <div
-          style={{
-            marginTop: 24,
-            borderTop: `1.5px solid #4447`,
-            paddingTop: 10,
-          }}
-        >
+      </div>
+
+      {/* Game/next/controls */}
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 0,
+        width: "100%",
+      }}>
+        {/* Board + next piece row */}
+        <div style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "flex-end",
+          justifyContent: "center",
+          width: "100%",
+          gap: "28px"
+        }}>
+          {/* Board */}
           <div
+            className="tetris-board-container"
+            tabIndex={0}
+            ref={gameBoardRef}
             style={{
-              fontSize: 13,
-              opacity: 0.75,
-              marginBottom: 3,
-              letterSpacing: 0.5,
+              background: "#12151b",
+              border: `4px solid ${COLORS.primary}`,
+              borderRadius: 21,
+              boxShadow: "0px 6px 28px -10px #173353b0",
+              padding: 12,
+              width: dimensions.boardW,
+              height: dimensions.boardH,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              marginBottom: 6,
+              position: "relative",
+              transition: "border 0.13s",
+              outline: "3px solid #181c2965",
             }}
           >
-            Controls
+            {/* Game Over Overlay */}
+            {isGameOver && (
+              <div
+                style={{
+                  position: "absolute",
+                  zIndex: 11,
+                  left: 0,
+                  top: 0,
+                  width: "100%",
+                  height: "100%",
+                  background: `rgba(27,31,43,0.87)`,
+                  borderRadius: 21,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 46,
+                  color: flashGameOver ? COLORS.accent : COLORS.primary,
+                  fontWeight: 900,
+                  letterSpacing: 2,
+                  filter: flashGameOver ? "drop-shadow(0px 0px 10px #ff0a)" : "",
+                  animation: "fade-in 0.5s",
+                  boxShadow: "0 4px 18px #160f189b"
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 64,
+                    marginBottom: 12,
+                    fontWeight: 900,
+                    textShadow: `0 4px 20px #000b`,
+                  }}
+                >
+                  GAME OVER
+                </span>
+                <span style={{ fontSize: 27, marginBottom: 2 }}>
+                  Score: <span style={{ color: COLORS.accent }}>{score}</span>
+                </span>
+                <button
+                  style={{
+                    marginTop: 25,
+                    fontSize: 22,
+                    borderRadius: 12,
+                    border: "none",
+                    padding: "8px 17px",
+                    fontWeight: 700,
+                    background: COLORS.primary,
+                    color: "#fff",
+                    cursor: "pointer",
+                    transition: "background 0.13s",
+                    boxShadow: "0 2px 14px #132",
+                    letterSpacing: 0.4,
+                  }}
+                  onClick={initGame}
+                  tabIndex={0}
+                >
+                  Restart
+                </button>
+              </div>
+            )}
+            {/* Pause Overlay */}
+            {!isGameOver && isPaused && (
+              <div
+                style={{
+                  position: "absolute",
+                  zIndex: 11,
+                  left: 0,
+                  top: 0,
+                  width: "100%",
+                  height: "100%",
+                  background: "#1b204baa",
+                  borderRadius: 21,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 44,
+                  color: COLORS.secondary,
+                  fontWeight: 900,
+                  letterSpacing: 2,
+                  animation: "fade-in 0.5s",
+                }}
+              >
+                <span
+                  style={{
+                    marginBottom: 18,
+                    textShadow: `0 2px 16px #000a`,
+                  }}
+                >
+                  PAUSED
+                </span>
+                <span style={{
+                  fontSize: 18, fontWeight: 500, opacity: 0.91, marginTop: 7
+                }}>
+                  Tap board, or <span style={{ color: COLORS.accent }}>Space</span> to resume
+                </span>
+              </div>
+            )}
+            <div
+              style={{
+                width: dimensions.boardW,
+                height: dimensions.boardH,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
+                zIndex: 1,
+                pointerEvents: "none",
+                filter: isGameOver ? "blur(2.1px)" : undefined,
+                boxShadow: "0px 0.5px 8px #01040a60",
+              }}
+            >
+              {renderBoard()}
+            </div>
           </div>
-          <ControlsList />
+          {/* Next Piece */}
+          <div style={{
+            background: "#222a36",
+            borderRadius: 13,
+            padding: "12px 11px",
+            boxShadow: "0 4px 16px #110f2245",
+            border: `2px solid ${COLORS.secondary}`,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            minWidth: "86px",
+            marginLeft: 2,
+            marginBottom: 16,
+          }}>
+            <div style={{ fontSize: 15, letterSpacing: 0.5, color: COLORS.accent, marginBottom: 3 }}>
+              NEXT
+            </div>
+            <NextPiecePreview
+              pieceType={nextPieceType}
+              cellSize={Math.max(dimensions.cell * 0.76, 16)}
+            />
+          </div>
         </div>
-        <div style={{ flex: 1 }} />
-        <div style={{ marginTop: 22, opacity: 0.36, fontSize: 12 }}>
-          <span role="img" aria-label="joy">
-            🎮
-          </span>{" "}
-          Tetris Demo &copy; {new Date().getFullYear()}
+        {/* Touch/Mobile Controls */}
+        <div
+          style={{
+            marginTop: 25,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "98vw",
+          }}
+        >
+          <div style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 16,
+            marginBottom: 4,
+          }}>
+            {mobileControlBtn("⭠", moveLeft, "Move Left")}
+            {mobileControlBtn("⭡", rotatePiece, "Rotate")}
+            {mobileControlBtn("⭢", moveRight, "Move Right")}
+            {mobileControlBtn("⭣", moveDown, "Soft Drop")}
+            {mobileControlBtn("↓", hardDrop, "Hard Drop", <span style={{ fontSize: 26 }}>DROP</span>)}
+          </div>
         </div>
+      </div>
+
+      {/* Footer/Credits */}
+      <div
+        style={{
+          marginTop: 32,
+          marginBottom: 14,
+          fontSize: 13,
+          color: "#fff6",
+          opacity: 0.66,
+          textAlign: "center"
+        }}
+      >
+        <span role="img" aria-label="joy">🎮</span> Tetris Demo &copy; {new Date().getFullYear()}
       </div>
     </div>
   );
 };
 
-const kbdStyle: React.CSSProperties = {
-  padding: "2px 7px",
-  borderRadius: 4,
-  border: "1px solid #556",
-  background: "#2a2d3d",
-  color: "#ffe",
-  fontSize: 13,
-  fontFamily: "monospace",
-  margin: "0 1.6px",
-  boxShadow: "0 1px 2px #1116",
-  display: "inline-block",
-};
+/* kbdStyle: removed, no longer needed for mobile controls */
 
 // Next piece preview
 const NextPiecePreview: React.FC<{ pieceType: TetrominoType | null; cellSize: number }> = ({
@@ -662,10 +813,11 @@ const NextPiecePreview: React.FC<{ pieceType: TetrominoType | null; cellSize: nu
         height: cellSize * 4,
         width: cellSize * 4,
         background: "#181c23",
-        borderRadius: 7,
+        borderRadius: 11,
         alignItems: "center",
         justifyContent: "center",
         gap: 0,
+        padding: 4,
       }}
     >
       {preview.map((row, y) => (
@@ -674,13 +826,14 @@ const NextPiecePreview: React.FC<{ pieceType: TetrominoType | null; cellSize: nu
             <div
               key={x}
               style={{
-                width: cellSize - 5,
-                height: cellSize - 5,
-                margin: 0.7,
-                borderRadius: 4,
+                width: cellSize - 7.5,
+                height: cellSize - 7.5,
+                margin: 1.1,
+                borderRadius: 6,
                 background: cell ? cell : "#23293d",
-                boxShadow: cell ? `0px 1px 6px #0005` : "none",
-                border: cell ? `1.3px solid #272e59c8` : "1px solid #142144",
+                boxShadow: cell ? `0px 1.3px 8px #0006` : "none",
+                border: cell ? `1.2px solid #0c102055` : "none",
+                transition: "background 0.13s, border 0.15s",
               }}
             />
           ))}
@@ -690,29 +843,6 @@ const NextPiecePreview: React.FC<{ pieceType: TetrominoType | null; cellSize: nu
   );
 };
 
-// Controls panel
-const ControlsList: React.FC = () => (
-  <div style={{ fontFamily: FONT_FAMILY, color: "#eee", fontSize: 13 }}>
-    <div>
-      <kbd style={kbdStyle}>←</kbd> / <kbd style={kbdStyle}>A</kbd> = Move Left
-    </div>
-    <div>
-      <kbd style={kbdStyle}>→</kbd> / <kbd style={kbdStyle}>D</kbd> = Move Right
-    </div>
-    <div>
-      <kbd style={kbdStyle}>↓</kbd> / <kbd style={kbdStyle}>S</kbd> = Move Down
-    </div>
-    <div>
-      <kbd style={kbdStyle}>↑</kbd> / <kbd style={kbdStyle}>W</kbd> / <kbd style={kbdStyle}>X</kbd> = Rotate
-    </div>
-    <div>
-      <kbd style={kbdStyle}>Space</kbd> = Hard Drop
-    </div>
-    <div>
-      <kbd style={kbdStyle}>P</kbd> = Pause/Resume
-    </div>
-    <div>
-      <kbd style={kbdStyle}>R</kbd> = Restart
-    </div>
-  </div>
-);
+/**
+ * No longer used, keyboard instruction panel removed for mobile/app look.
+ */
