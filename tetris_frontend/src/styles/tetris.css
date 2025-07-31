@@ -18,6 +18,7 @@ body {
   background: #182027;
 }
 
+/* Game layout: centered, mobile-ready, clean */
 .tetris-game-layout {
   width: 100vw;
   min-height: 100vh;
@@ -26,21 +27,26 @@ body {
   align-items: center;
   justify-content: center;
   flex-direction: column !important;
-  background: #182027;
+  background: #182027; /* No debug dev backgrounds */
 }
 
+/* Board wrapper: no outlines, only border as UI */
 .tetris-board-container {
   outline: none;
+  /* critical: no debug box shadows or backgrounds */
 }
 
+/* Single block: all debug outlines removed. Only transition/polish remains. */
 .tetris-cell {
   transition: background 0.12s, border 0.12s;
   box-sizing: border-box;
 }
 
+/* Remove unused, legacy, debug, helper panels */
 .tetris-sidepanel {
   min-width: 144px;
   max-width: 200px;
+  /* No debug backgrounds, outlines, etc. */
 }
 
 @media (max-width: 900px) {
@@ -60,8 +66,10 @@ body {
   }
 }
 
-/* Mobile control buttons */
-.tetris-mobile-controls button {
+/* Remove legacy debug grid/backgrounds */
+
+.tetris-mobile-controls button,
+.tetris-mobile-btn {
   appearance: none;
   -webkit-appearance: none;
   border: none;
@@ -104,8 +112,37 @@ body {
   }
 }
 
-/* Game Over/Pause fade animation */
+/* Fade-in for overlays (game over, pause) */
 @keyframes fade-in {
   from { opacity: 0; transform: scale(1.12);}
   to { opacity: 1; transform: scale(1);}
 }
+
+/* Subtle grid background for board ONLY if required visually (by design) */
+/* Commented out, but left as opt-in, not enabled by default for final prod visual polish */
+/*
+.tetris-board-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+      to right,
+      rgba(240,245,255,0.04) 0px,
+      rgba(240,245,255,0.04) 1.1px,
+      transparent 1.1px,
+      transparent 32px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(240,245,255,0.04) 0px,
+      rgba(240,245,255,0.04) 1.1px,
+      transparent 1.1px,
+      transparent 32px
+    );
+  opacity: 0.22;
+  filter: blur(0.7px);
+  border-radius: inherit;
+  z-index: 0;
+}
+*/

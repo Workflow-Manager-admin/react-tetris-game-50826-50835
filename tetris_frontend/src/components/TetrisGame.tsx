@@ -1,4 +1,4 @@
-/* global setTimeout, clearTimeout */
+﻿/* global setTimeout, clearTimeout */
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Board,
@@ -40,9 +40,6 @@ const LEVEL_SPEEDS = [
 ];
 
 const START_LEVEL = 0;
-
-// Remove unused type
-// type Move = "left" | "right" | "down" | "rotate" | "drop" | "pause" | "restart";
 
 interface PieceState {
   type: TetrominoType;
@@ -97,7 +94,7 @@ export const TetrisGame: React.FC = () => {
   const isGameOver = status === "gameover";
 
   // Timing (falling)
-  const fallTimer = useRef<any>(null);
+  const fallTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Start function
   const initGame = useCallback(() => {
@@ -188,13 +185,19 @@ export const TetrisGame: React.FC = () => {
   // Falling timer
   useEffect(() => {
     if (isPaused || isGameOver || !piece) {
-      if (fallTimer.current) clearTimeout(fallTimer.current);
+      if (fallTimer.current) {
+        clearTimeout(fallTimer.current);
+        fallTimer.current = null;
+      }
       return;
     }
     const speed = LEVEL_SPEEDS[level] ?? 40;
     fallTimer.current = setTimeout(() => fall(), speed);
     return () => {
-      if (fallTimer.current) clearTimeout(fallTimer.current);
+      if (fallTimer.current) {
+        clearTimeout(fallTimer.current);
+        fallTimer.current = null;
+      }
     };
   }, [piece, isPaused, isGameOver, fall, level]);
 
@@ -316,7 +319,7 @@ export const TetrisGame: React.FC = () => {
     cell: number,
     ghost = false
   ) => {
-    // Sleek, rounded, modern app-look for cells; no debug outlines, soft shadow on filled blocks
+    // Modern touch-optimized block: No debug outlines, only soft shadow and border for filled cells
     const style: React.CSSProperties = {
       width: dimensions.cell - 3.5,
       height: dimensions.cell - 3.5,
@@ -779,9 +782,6 @@ export const TetrisGame: React.FC = () => {
   );
 };
 
-/* kbdStyle: removed, no longer needed for mobile controls */
-
-// Next piece preview
 const NextPiecePreview: React.FC<{ pieceType: TetrominoType | null; cellSize: number }> = ({
   pieceType,
   cellSize,
@@ -831,7 +831,7 @@ const NextPiecePreview: React.FC<{ pieceType: TetrominoType | null; cellSize: nu
                 margin: 1.1,
                 borderRadius: 6,
                 background: cell ? cell : "#23293d",
-                boxShadow: cell ? `0px 1.3px 8px #0006` : "none",
+                boxShadow: cell ? "0 1.3px 8px #0006" : "none",
                 border: cell ? `1.2px solid #0c102055` : "none",
                 transition: "background 0.13s, border 0.15s",
               }}
@@ -842,7 +842,3 @@ const NextPiecePreview: React.FC<{ pieceType: TetrominoType | null; cellSize: nu
     </div>
   );
 };
-
-/**
- * No longer used, keyboard instruction panel removed for mobile/app look.
- */
